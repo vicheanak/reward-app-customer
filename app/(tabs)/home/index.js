@@ -1,19 +1,23 @@
-import { View, Button, StyleSheet, FlatList, Alert } from 'react-native'
+import { View, StyleSheet, FlatList, Alert, useLayoutEffect, Dimensions } from 'react-native'
 import React from 'react'
 import { Link, useRouter } from 'expo-router'
 
 import { FIREBASE_AUTH, FIREBASE_DB, FIREBASE_GET_AUTH } from '../../../firebaseConfig';
 import { getDatabase, ref, limitToLast, set, onValue, get, update, remove, query,orderByValue, orderByChild } from "firebase/database";
+import { getAuth } from 'firebase/auth';
 import {useState, useEffect, useMemo} from "react";
 import { BarCodeScanner } from 'expo-barcode-scanner';
-import { Chip, Divider, withTheme, lightColors, Card, Text, ListItem } from '@rneui/themed';
+import { Chip, Divider, withTheme, lightColors, Card, Text, ListItem, Button, Icon } from '@rneui/themed';
 import { ScrollView } from 'react-native-gesture-handler';
 import moment from 'moment-timezone';
 import { useIsFocused } from "@react-navigation/native";
+import QRCode from 'react-native-qrcode-svg';
 
 const red = 'rgba(199, 43, 98, 1)';
 const yellow = '#ffc107';
 const white = '#fff';
+const windowWidth = Dimensions.get('window').width;
+const windowHeight = Dimensions.get('window').height;
 moment.tz.setDefault("Australia/Melbourne");
 
 const HomePage = () => {
@@ -23,7 +27,7 @@ const HomePage = () => {
   const usersRef = ref(db, 'users/');
   // const transactionsRef = ref(db, 'transactions/');
   const transactionsRef = query(ref(db, 'transactions'), orderByChild('dateTime'), limitToLast(10));
-
+  const auth = getAuth();
   const router = useRouter();
 
   const [hasPermission, setHasPermission] = useState(null);
@@ -39,10 +43,34 @@ const HomePage = () => {
     setHasPermission(status === 'granted');
   };
 
+ 
+
+  const [user, setUser] = useState({});
+  const [stamps, setStamps] = useState([ false, false, false, false, false, false, false, false, false, false ]);
+  const [userAuth, setUserAuth] = useState({});
   useEffect(() => {
     // if(isFocused){ 
     //   getInitialData();
     // }
+
+    setUserAuth(auth.currentUser)
+    const getUser = ref(db, 'users/' + auth.currentUser.uid);
+
+    onValue(getUser, (snapshot) => {
+      const data = snapshot.val();
+      let tempStamps = []
+      stamps.forEach((v, i) => {
+        if (i < data.stamps) {
+          tempStamps.push(true);
+        } else {
+          tempStamps.push(false);
+        }
+      })
+      setStamps(tempStamps);
+      setUser(data);
+    }, {
+      onlyOnce: true
+    });
     
     onValue(usersRef, (snapshot) => {
       const data = snapshot.val();
@@ -113,27 +141,6 @@ const HomePage = () => {
     return <Text>No access to camera</Text>;
   }
 
-  const incrementByOne = () => {
-    
-    const d1 = new Date();
-    const usersRef = ref(db, 'users/' + d1.getTime());
-    
-    // set(userRef, {
-    //   'email': 'terry@gmail.com',
-    //   'name': 'Terry',
-    //   'stamps': 0
-    // });
-
-    onValue(usersRef, (snapshot) => {
-      const data = snapshot.val();
-      console.log({data})
-      setList(data);
-    }, {
-      onlyOnce: true
-    });
-
-    // remove(ref(db, 'users'));
-  }
   
   const Item = ({title}) => (
     <View containerStyle={styles.itemContainer}>
@@ -145,48 +152,43 @@ const HomePage = () => {
   return (
     <View style={styles.container}>
       <View style={styles.viewBarcodeContainer}>
-        {scanned && <Button style={styles.scannedButton} title={'Tap to Scan Again'} onPress={() => setScanned(false)} />}
-        {/* <Button style={styles.scannedButton} title={'Tap to Scan Again'} onPress={() => setScanned(false)} /> */}
-        <BarCodeScanner
-          onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
-          style={styles.barcodeContainer}
-        />
-      </View>
-      <View style={{marginTop: 10, width: '90%', alignSelf: 'center'}}>
-        <Text style={styles.transactionTitle}>Latest transactions</Text>
-        <ScrollView style={styles.scrollView}>
-        {transactions && Object.entries(transactions).map(([key, val], i) => (
-          <View>
-            <ListItem>
-              <ListItem.Content>
-                {val.stamps == 0 ? <ListItem.Title style={{color: red}}>{val.user} got a free drink!</ListItem.Title> : <ListItem.Title>{val.user} got {val.stamps} {val.stamps < 2 ? 'stamp' : 'stamps'}</ListItem.Title> }
-              </ListItem.Content>
-              <ListItem.Subtitle>{moment(val.dateTime).fromNow()}</ListItem.Subtitle>
-              {/* <ListItem.Subtitle>{moment(val.dateTime).format('YYYY-MM-DDTHH:mm:ss.SSS')}</ListItem.Subtitle> */}
-            </ListItem>
-            <Divider />
-          </View>
-        ))}
-          {/* {transactions.map(val => {
+        <Card containerStyle={styles.cardContainer}>
+          <Card.Title style={styles.cardTitle}>{user.name}</Card.Title>
+          <View style={styles.insideCardContainer}>
+          {stamps.map((value, index) => {
             return (
-              <ListItem>
-                <ListItem.Content>
-                  <ListItem.Title>{val.user} got {val.stamps} {val.stamps < 2 ? 'stamp' : 'stamps'}</ListItem.Title>
-                </ListItem.Content>
-                <ListItem.Subtitle>{val.time}</ListItem.Subtitle>
-              </ListItem>
+              <View style={{width: '20%', marginBottom: 20}}>
+                <Icon
+                  reverse={value ? true : false}
+                  raised
+                  name={value ? 'coffee' : 'coffee-outline'}
+                  type='material-community'
+                  color={value ? red : yellow}
+                  size={25}
+                  iconStyle={{borderColor: yellow, borderWidth: 1.5, padding: 13, borderRadius: 25}}
+                  onPress={() => onStamp(value, index)}
+                />
+              </View>
             )
-          })} */}
-          
-        </ScrollView>
+          })}
+          </View>
+        </Card>
       </View>
-      {list && Object.entries(list).map(([key, val], i) => (
+      <View style={styles.bottomContainer}>
+        {/* <Text style={styles.transactionTitle}>Latest transactions</Text> */}
+        <View style={styles.scrollView}>
+          <QRCode
+            // color={red}
+            // enableLinearGradient={true}
+            // linearGradient={['rgb(255,0,0)','rgb(0,255,255)']}
+            size={windowWidth - 100}
+            value={auth.currentUser.uid}
+          />
+        </View>
+      </View>
+      {/* {list && Object.entries(list).map(([key, val], i) => (
         <Link href={"/home/"+key}>{val.name}</Link>
-      ))}
-      <Button onPress={ () => {
-        incrementByOne();
-      }} title="Increment"></Button>
-      
+      ))} */}
     </View>
   )
 }
@@ -195,13 +197,22 @@ export default HomePage
 
 const styles = StyleSheet.create({
   scrollView: {
-    height: '40%', 
+    // height: '40%', 
     marginTop: 10, 
-    width: '100%', 
+    width: windowWidth - 60, 
     alignSelf: 'center', 
     borderRadius: 10, 
-    padding: 10, 
+    padding: 20, 
     backgroundColor: 'white'
+},
+qrCodeComponent: {
+  // width: '100%'
+  alignSelf: 'center', 
+},
+bottomContainer: {
+  marginTop: 10, 
+  width: '90%', 
+  alignSelf: 'center'
 },
 scannedButton: {
   position: 'absolute',
@@ -230,7 +241,7 @@ scannedButton: {
     borderRadius: 20,
     // marginTop: 20,
     height: 300,
-    width: '90%'
+    width: '100%'
   },
   input: {
       marginVertical: 4,
@@ -249,20 +260,30 @@ scannedButton: {
     flexDirection: "row", /*it was column*/ 
     alignContent: "space-between",
   },
-  itemDate: {
-    // minWidth: 5,
-    // maxWidth: 80,
-    // marginLeft: 5,
-    // backgroundColor: 'red'
+  cardContainer: { 
+    marginTop: 15, 
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: red,
+    // backgroundColor: yellow
   },
-  itemText: {
-    // backgroundColor: 'red',
-    // minWidth: 5,
-    // maxWidth: 220,
-    // height: 25,
-    // fontSize: 17,
-    // borderBottomWidth: 1,
-    // borderBottomColor: 'red',
-    // borderColor: 'red'
-  }
+  cardTitle: {
+    backgroundColor: 'white', 
+    // borderWidth: 1, 
+    borderColor: red, 
+    padding:7, 
+    fontSize: 20, 
+    fontStyle: 'italic',
+    color: red
+  },
+  mainContainer: {
+    backgroundColor: yellow,
+    height: '100%'
+  },
+  insideCardContainer: {
+    flexDirection: 'row',
+    width: '100%',
+    flexWrap: 'wrap',
+    marginTop: 10,
+  },
 })

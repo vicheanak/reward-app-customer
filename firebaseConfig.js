@@ -5,6 +5,7 @@ import { getAuth } from "firebase/auth";
 import {
   getReactNativePersistence,
   initializeAuth,
+  FacebookAuthProvider
 } from "firebase/auth/react-native";
 
 import { getDatabase } from "firebase/database";
@@ -31,4 +32,5 @@ export const FIREBASE_AUTH = initializeAuth(FIREBASE_APP, {
 });
 export const FIREBASE_GET_AUTH = getAuth(FIREBASE_APP);
 export const FIREBASE_DB = getDatabase(FIREBASE_APP);
+export const FACEBOOK_AUTH = new FacebookAuthProvider(FIREBASE_APP);
 

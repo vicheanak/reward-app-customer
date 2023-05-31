@@ -131,25 +131,25 @@ const HomeDetail = () => {
               },
             }} />
             <Card containerStyle={styles.cardContainer}>
-            <Card.Title style={styles.cardTitle}>{user.name}</Card.Title>
-            <View style={styles.container}>
-            {stamps.map((value, index) => {
-              return (
-                <View style={{width: '20%', marginBottom: 20}}>
-                  <Icon
-                    reverse={value ? true : false}
-                    raised
-                    name={value ? 'coffee' : 'coffee-outline'}
-                    type='material-community'
-                    color={value ? red : yellow}
-                    size={25}
-                    iconStyle={{borderColor: yellow, borderWidth: 1.5, padding: 13, borderRadius: 25}}
-                    onPress={() => onStamp(value, index)}
-                  />
-                </View>
-              )
-            })}
-            </View>
+              <Card.Title style={styles.cardTitle}>{user.name}</Card.Title>
+              <View style={styles.container}>
+              {stamps.map((value, index) => {
+                return (
+                  <View style={{width: '20%', marginBottom: 20}}>
+                    <Icon
+                      reverse={value ? true : false}
+                      raised
+                      name={value ? 'coffee' : 'coffee-outline'}
+                      type='material-community'
+                      color={value ? red : yellow}
+                      size={25}
+                      iconStyle={{borderColor: yellow, borderWidth: 1.5, padding: 13, borderRadius: 25}}
+                      onPress={() => onStamp(value, index)}
+                    />
+                  </View>
+                )
+              })}
+              </View>
             </Card>
             {user.stamps < 10 && <Button
               title="STAMP"

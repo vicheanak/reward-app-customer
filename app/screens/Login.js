@@ -1,13 +1,17 @@
 import { StyleSheet, View, TextInput, ActivityIndicator, Alert, KeyboardAvoidingView } from 'react-native'
 import React, { useState } from 'react'
-import { FIREBASE_AUTH } from '../../firebaseConfig';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { FIREBASE_AUTH, FIREBASE_DB, FACEBOOK_AUTH } from '../../firebaseConfig';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, FacebookAuthProvider, signInWithPopup, getAuth } from 'firebase/auth';
 import { Stack, useRouter } from "expo-router";
 import { Button, ButtonGroup, withTheme, Text, Input } from '@rneui/themed';
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import { getDatabase, ref, set, onValue, update, remove, push } from "firebase/database";
+const auth = getAuth();
+
 const red = 'rgba(199, 43, 98, 1)';
 const yellow = '#ffc107';
 const white = '#fff';
+const db = FIREBASE_DB;
 
 const Login = ({navigation}) => {
     const [email, setEmail] = useState('');
@@ -21,33 +25,71 @@ const Login = ({navigation}) => {
 
     const signIn = async () => {
         setLoading(true);
+        // signInWithPopup(auth, FACEBOOK_AUTH)
+        // .then((result) => {
+        //   // The signed-in user info.
+        //   const user = result.user;
+      
+        //   // This gives you a Facebook Access Token. You can use it to access the Facebook API.
+        //   const credential = FacebookAuthProvider.credentialFromResult(result);
+        //   const accessToken = credential.accessToken;
+      
+        // })
+        // .catch((error) => {
+        //   console.log({error});
+        // });
+
         try{
             const response = await signInWithEmailAndPassword(auth, email, password);
+            // const user = auth.currentUser;
+            // console.log({user});
             router.replace("/(tabs)/home");
         } catch (error) {
             Alert.alert("Sign In Failed");
             console.log(error);
         } finally {
             setLoading(false);
-
         }
     }
 
     const signUp = async () => {
-        setLoading(true);
-        try{
-            const response = await createUserWithEmailAndPassword(auth, email, password);
-            console.log(response);
-            await signInWithEmailAndPassword(auth, email, password);
-            router.replace("/(tabs)/home");
-            // Alert.alert("Check your email");
+        Alert.prompt(
+            "What's your nickname?",
+            "",
+            [
+              {
+                text: "OK",
+                onPress: async (name) => {
+                     setLoading(true);
+                    
+                    try{
+                        //Find Email first
+                        const response = await createUserWithEmailAndPassword(auth, email, password);
+                        console.log({response});
+                        // const userRef = push(ref(db, 'users/'));
+                        
+                        await signInWithEmailAndPassword(auth, email, password);
+                        const user = auth.currentUser;
+                        const userRef = ref(db, 'users/' + user.uid);
+                        set(userRef, {
+                            email: email,
+                            name: name,
+                            stamps: 0
+                        })
+                        // router.replace("/(tabs)/home");
+                    } catch (error) {
+                        Alert.alert("Signed Up Failed", error.message);
+                        console.log(error);
+                    } finally {
+                        setLoading(false);
+                    }
+                }
+              }
+            ]
+          );
+        
 
-        } catch (error) {
-            Alert.alert("Signed Up Failed", error.message);
-            console.log(error);
-        } finally {
-            setLoading(false);
-        }
+       
     }
 
     const ValidateEmail = (mail) => {
@@ -68,7 +110,7 @@ const Login = ({navigation}) => {
     return (
         <View style={styles.container}>
             <KeyboardAvoidingView behavior='padding'>
-                <Input
+            <Input
                     containerStyle={{}}
                     inputContainerStyle={styles.inputContainerStyle}
                     errorMessage={isEmailValid ? "" : "Invalid Email"}
@@ -108,11 +150,10 @@ const Login = ({navigation}) => {
                     }}
                     secureTextEntry={true}
                     />
-
                 {loading ? 
                 <ActivityIndicator size="large" color="#000000" /> 
                 : <>
-                {/* <Button
+                <Button
                     title="SIGN UP"
                     titleStyle={styles.signUpButtonTitleStyle}
                     type="outline"
@@ -120,7 +161,7 @@ const Login = ({navigation}) => {
                     raised
                     buttonStyle={styles.signUpButtonStyle}
                     containerStyle={styles.buttonContainer}
-                    onPress={signUp} /> */}
+                    onPress={signUp} />
                <Button
                     title="SIGN IN"
                     titleStyle={styles.buttonTitleStyle}
