@@ -56,9 +56,11 @@ const HomePage = () => {
     setUserAuth(auth.currentUser)
     const getUser = ref(db, 'users/' + auth.currentUser.uid);
 
+    console.log({stamps});
     onValue(getUser, (snapshot) => {
       const data = snapshot.val();
       let tempStamps = []
+      console.log({data});
       stamps.forEach((v, i) => {
         if (i < data.stamps) {
           tempStamps.push(true);
@@ -68,8 +70,6 @@ const HomePage = () => {
       })
       setStamps(tempStamps);
       setUser(data);
-    }, {
-      onlyOnce: true
     });
     
     onValue(usersRef, (snapshot) => {
@@ -154,10 +154,11 @@ const HomePage = () => {
       <View style={styles.viewBarcodeContainer}>
         <Card containerStyle={styles.cardContainer}>
           <Card.Title style={styles.cardTitle}>{user.name}</Card.Title>
+          <Card.Divider />
           <View style={styles.insideCardContainer}>
           {stamps.map((value, index) => {
             return (
-              <View style={{width: '20%', marginBottom: 20}}>
+              <View key={index} style={{width: '20%', marginBottom: 20}}>
                 <Icon
                   reverse={value ? true : false}
                   raised
@@ -166,7 +167,7 @@ const HomePage = () => {
                   color={value ? red : yellow}
                   size={25}
                   iconStyle={{borderColor: yellow, borderWidth: 1.5, padding: 13, borderRadius: 25}}
-                  onPress={() => onStamp(value, index)}
+                  // onPress={() => onStamp(value, index)}
                 />
               </View>
             )
@@ -269,9 +270,10 @@ scannedButton: {
   },
   cardTitle: {
     backgroundColor: 'white', 
-    // borderWidth: 1, 
-    borderColor: red, 
-    padding:7, 
+    // borderBottomWidth: 2, 
+    // borderBottomColor: red,
+    // borderWidth: 2,
+    // padding:7, 
     fontSize: 20, 
     fontStyle: 'italic',
     color: red

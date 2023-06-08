@@ -7,7 +7,7 @@ const StackLayout = () => {
     return (
         <Stack>
             <Stack.Screen name="index" options={{
-                headerTitle: 'Reward App',
+                headerTitle: '',
                 headerTintColor: red,
                 headerTitleStyle: {
                     fontSize: 20

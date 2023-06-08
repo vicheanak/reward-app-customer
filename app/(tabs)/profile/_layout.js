@@ -17,6 +17,26 @@ const StackLayout = () => {
                     backgroundColor: yellow,
                 },
             }}/>
+            <Stack.Screen name="termsconditions" options={{
+                headerTitle: '',
+                headerTintColor: red,
+                headerTitleStyle: {
+                    fontSize: 20
+                },
+                headerStyle: {
+                    backgroundColor: yellow,
+                },
+            }}/>
+            <Stack.Screen name="privacy" options={{
+                headerTitle: '',
+                headerTintColor: red,
+                headerTitleStyle: {
+                    fontSize: 20
+                },
+                headerStyle: {
+                    backgroundColor: yellow,
+                },
+            }}/>
         </Stack>
     )
 }

@@ -1,15 +1,23 @@
 import { View, StyleSheet } from 'react-native'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link, useRouter } from 'expo-router'
-import { FIREBASE_AUTH } from '../../../firebaseConfig'
+import { FIREBASE_AUTH, FIREBASE_DB } from '../../../firebaseConfig'
 import { Card, Button, Icon, Text, Image, Avatar } from '@rneui/themed';
+import { getAuth } from 'firebase/auth';
+import { getDatabase, ref, limitToLast, set, onValue, get, update, remove, query,orderByValue, orderByChild } from "firebase/database";
+import { ListItem } from '@rneui/themed';
 
 const red = 'rgba(199, 43, 98, 1)';
 const yellow = '#ffc107';
 const white = '#fff';
 
+const db = FIREBASE_DB;
+
 const ProfilePage = () => {
   const router = useRouter();
+  const currentUser = getAuth().currentUser;
+  const userRef = ref(db, 'users/' + currentUser.uid);
+  const [user, setUser] = useState({});
 
   const onLogout = () => {
     try{
@@ -20,9 +28,60 @@ const ProfilePage = () => {
     }
   }
 
+  useEffect(async () => {
+    onValue(userRef, (snapshot) => {
+      const data = snapshot.val();
+      setUser(data);
+    }, {
+      onlyOnce: true
+    });
+  }, [])
+
   return (
     <View style={styles.container}>
-     {/* <Text h4>You're an admin</Text> */}
+      <View style={styles.subContainer}>
+        <Icon
+        name='user'
+        type='font-awesome'
+        onPress={() => console.log('hello')} />
+        <Text h4>{user?.name ? user.name : 'Customer'}</Text>
+      </View>
+      <View style={styles.subContainer}>
+        <Icon
+        name='inbox'
+        type='font-awesome'
+        onPress={() => console.log('hello')} />
+        <Text h4>{currentUser.email}</Text>
+      </View>
+      <View style={styles.subContainer}>
+        <Icon
+          name='link'
+          type='font-awesome'
+          onPress={() => console.log('hello')} />
+        <Text h4><Link href={"/profile/termsconditions"}>Terms & Conditions</Link></Text>
+      </View>
+        <View style={styles.subContainer}>
+        <Icon
+          name='link'
+          type='font-awesome'
+          onPress={() => console.log('hello')} />
+        <Text h4><Link href={"/profile/privacy"}>Privacy Policy</Link></Text>
+      </View>
+
+      {/* <View style={{ padding: 10, flexDirection: 'row', flexWrap: 'wrap', width: '70%', justifyContent: 'space-between' }}>
+        <Text h4>Name</Text>
+        <Text h4>{user?.name ? user.name : 'Customer'}</Text>
+      </View>
+      <View style={{ padding: 10, flexDirection: 'row', flexWrap: 'wrap', width: '70%', justifyContent: 'space-between' }}>
+        <Text h4>Email</Text>
+        <Text h4>{currentUser.email}</Text>
+      </View>
+      <View style={{ padding: 10, flexDirection: 'row', flexWrap: 'wrap', width: '70%', justifyContent: 'space-between' }}>
+        <Link href={"/profile/termsconditions"}>Terms & Conditions</Link>
+      </View>
+      <View style={{ padding: 10, flexDirection: 'row', flexWrap: 'wrap', width: '70%', justifyContent: 'space-between' }}>
+        <Link href={"/profile/privacy"}>Privacy Policy</Link>
+      </View> */}
       <Button
         title="LOGOUT"
         titleStyle={styles.submitButtonTitle}
@@ -54,6 +113,13 @@ const styles = StyleSheet.create({
     fontSize: 20, 
     fontStyle: 'italic',
     color: red
+  },
+  subContainer: { 
+    padding: 10, 
+    flexDirection: 'row', 
+    flexWrap: 'wrap', 
+    width: '70%', 
+    justifyContent: 'space-between' 
   },
   mainContainer: {
     backgroundColor: yellow,
@@ -90,6 +156,8 @@ const styles = StyleSheet.create({
     marginVertical: 20,
     alignSelf: 'center',
     borderRadius: 20,
+    position: 'absolute',
+    bottom: 10
   },
   buttonFreeDrinkContainer: {
     width: '92%',

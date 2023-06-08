@@ -1,0 +1,31 @@
+{
+  "cli": {
+    "version": ">= 3.13.2",
+    "promptToConfigurePushNotifications": false
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal"
+    },
+    "production": {}
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "api-6721487117368879038-447933-bbc0bcad77b2.json",
+        "track": "internal"
+      },
+      "ios": {
+        "appleId": "vicheanak@gmail.com",
+        "ascAppId": "6450027371",
+        "appleTeamId": "GL9UDHD9D7",
+        "sku": "com.reward-app-customer.app",
+        "bundleIdentifier": "com.reward-app-customer.app"
+      }
+    }
+  }
+}

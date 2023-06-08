@@ -14,6 +14,7 @@ const white = '#fff';
 const db = FIREBASE_DB;
 
 const Login = ({navigation}) => {
+    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -41,9 +42,12 @@ const Login = ({navigation}) => {
 
         try{
             const response = await signInWithEmailAndPassword(auth, email, password);
-            // const user = auth.currentUser;
-            // console.log({user});
-            router.replace("/(tabs)/home");
+            const user = auth.currentUser;
+            if (user.email == 'admin@rewardapp.com'){
+                Alert.alert("You're not a customer!")
+            } else {
+                router.replace("/(tabs)/home");
+            }
         } catch (error) {
             Alert.alert("Sign In Failed");
             console.log(error);
@@ -53,43 +57,28 @@ const Login = ({navigation}) => {
     }
 
     const signUp = async () => {
-        Alert.prompt(
-            "What's your nickname?",
-            "",
-            [
-              {
-                text: "OK",
-                onPress: async (name) => {
-                     setLoading(true);
-                    
-                    try{
-                        //Find Email first
-                        const response = await createUserWithEmailAndPassword(auth, email, password);
-                        console.log({response});
-                        // const userRef = push(ref(db, 'users/'));
-                        
-                        await signInWithEmailAndPassword(auth, email, password);
-                        const user = auth.currentUser;
-                        const userRef = ref(db, 'users/' + user.uid);
-                        set(userRef, {
-                            email: email,
-                            name: name,
-                            stamps: 0
-                        })
-                        // router.replace("/(tabs)/home");
-                    } catch (error) {
-                        Alert.alert("Signed Up Failed", error.message);
-                        console.log(error);
-                    } finally {
-                        setLoading(false);
-                    }
-                }
-              }
-            ]
-          );
-        
-
-       
+        setLoading(true);
+        try{
+            //Find Email first
+            const response = await createUserWithEmailAndPassword(auth, email, password);
+            console.log({response});
+            // const userRef = push(ref(db, 'users/'));
+            
+            await signInWithEmailAndPassword(auth, email, password);
+            const user = auth.currentUser;
+            const userRef = ref(db, 'users/' + user.uid);
+            set(userRef, {
+                email: email,
+                name: name ? name : "Customer",
+                stamps: 0
+            })
+            // router.replace("/(tabs)/home");
+        } catch (error) {
+            Alert.alert("Signed Up Failed", error.message);
+            console.log(error);
+        } finally {
+            setLoading(false);
+        }
     }
 
     const ValidateEmail = (mail) => {
@@ -110,7 +99,22 @@ const Login = ({navigation}) => {
     return (
         <View style={styles.container}>
             <KeyboardAvoidingView behavior='padding'>
-            <Input
+                <Input
+                    containerStyle={{}}
+                    inputContainerStyle={styles.inputContainerStyle}
+                    inputStyle={{}}
+                    // autoCapitalize='yes'
+                    // label="User Form"
+                    labelStyle={{}}
+                    labelProps={{}}
+                    leftIcon={<Icon name="account" size={25} />}
+                    leftIconContainerStyle={{}}
+                    placeholder="Name"
+                    onChangeText={(text) => {
+                        setName(text)
+                    }}
+                    />
+                <Input
                     containerStyle={{}}
                     inputContainerStyle={styles.inputContainerStyle}
                     errorMessage={isEmailValid ? "" : "Invalid Email"}

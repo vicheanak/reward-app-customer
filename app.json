@@ -2,6 +2,7 @@
   "expo": {
     "name": "reward-app-customer",
     "slug": "reward-app-customer",
+    "scheme": "com.reward-app-customer.app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -15,13 +16,15 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.reward-app-customer.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.vicheanak.rewardappcustomer"
     },
     "web": {
       "favicon": "./assets/favicon.png"
